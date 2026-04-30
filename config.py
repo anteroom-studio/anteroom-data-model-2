@@ -1,60 +1,46 @@
-# ================================================================
-# ZAI WORLD MODEL - CONFIG FILE
-# by Zawwar (github.com/Zawwarsami16)
-#
-# This is the ONLY file you need to touch.
-# Everything else runs automatically.
-# ================================================================
+import os
+from pathlib import Path
 
-# Get your key from console.anthropic.com
-# If you have Ollama installed with a local model, you don't need this
-ANTHROPIC_KEY = "YOUR_ANTHROPIC_API_KEY_HERE"
+# ============================================================
+# ANTEROOM DATA MODEL - CONFIGURATION
+# ============================================================
 
-# Where to store all the downloaded data
-# I use my 1TB portable SSD — change this to wherever you want
-# Windows: "D:/ZAI_Data"   Linux: "/mnt/ssd/ZAI_Data"
-DATA_PATH = "./zai_data"
 
-# How far back to pull data — I went with 1871, the further the better
-HISTORY_FROM_YEAR = 1871
+def load_env(path: str = ".env"):
+    env = Path(path)
+    if not env.exists():
+        return
+    for line in env.read_text().splitlines():
+        if "=" in line and not line.startswith("#"):
+            k, v = line.split("=", 1)
+            os.environ.setdefault(k.strip(), v.strip())
 
-# How often live prices refresh (in seconds) — 300 = every 5 minutes
-UPDATE_INTERVAL = 300
 
-# Minimum confidence before showing a prediction — I keep it at 65
-MIN_CONFIDENCE = 65
+load_env()
 
-# ================================================================
-# DATASETS
-# Turn off anything you don't want downloaded
-# ================================================================
+ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "")
+DATA_PATH = os.getenv("ANTEROOM_DATA_PATH", "./anteroom_data")
+HISTORY_FROM_YEAR = int(os.getenv("ANTEROOM_HISTORY_FROM_YEAR", "1871"))
+UPDATE_INTERVAL = int(os.getenv("ANTEROOM_UPDATE_INTERVAL", "300"))
+MIN_CONFIDENCE = int(os.getenv("ANTEROOM_MIN_CONFIDENCE", "65"))
+
+USE_LOCAL_LLM = os.getenv("ANTEROOM_USE_LOCAL_LLM", "true").lower() == "true"
+LOCAL_LLM_MODEL = os.getenv("ANTEROOM_LOCAL_LLM_MODEL", "phi3:mini")
+
 DATASETS = {
-    "sp500":        True,   # S&P 500 — the main one
-    "gold":         True,   # Gold — always watch this
-    "oil":          True,   # Crude oil — moves everything
-    "dollar":       True,   # Dollar index — affects all markets
-    "bitcoin":      True,   # Bitcoin — my main focus
-    "inflation":    True,   # US CPI — goes back to 1871
-    "gdp":          True,   # US GDP
-    "unemployment": True,   # Unemployment rate
-    "interest":     True,   # Fed interest rates
-    "vix":          True,   # Fear index — very useful
-    "nasdaq":       True,   # Nasdaq — tech heavy
-    "dxy":          True,   # Dollar index detailed
-    "bonds":        True,   # 10Y Treasury yield
-    "copper":       True,   # Copper = economic health indicator
-    "crypto_total": True,   # Total crypto market cap
+    "sp500": True,
+    "gold": True,
+    "oil": True,
+    "dollar": True,
+    "bitcoin": True,
+    "inflation": True,
+    "gdp": True,
+    "unemployment": True,
+    "interest": True,
+    "vix": True,
+    "nasdaq": True,
+    "dxy": True,
+    "bonds": True,
+    "copper": True,
+    "crypto_total": True,
 }
-
-# ================================================================
-# LOCAL LLM (optional)
-# If you have Ollama installed, set USE_LOCAL_LLM = True
-# This gives you FREE predictions without any API costs
-# I run phi3:mini on my machine — works fine without a GPU
-# ================================================================
-USE_LOCAL_LLM = True
-LOCAL_LLM_MODEL = "phi3:mini"
-# Other options depending on your hardware:
-# "llama3:8b"   — needs 8GB+ VRAM
-# "llama3:13b"  — needs 12GB+ VRAM
-# "mistral:7b"  — good balance of speed and quality
