@@ -1,227 +1,207 @@
 """
-ZAI World Model — Live Dashboard
-by Zawwar (github.com/Zawwarsami16)
+Anteroom Data Model - Intelligence Terminal
 
-Runs 24/7 in your terminal.
-Shows live market prices, AI predictions, historical similarity.
-Auto-refreshes every 5 minutes.
-Auto re-analyzes every 6 hours.
-
-Just leave it running in the background.
+Terminal dashboard for live market data, world-event signals, historical similarity,
+and optional scenario summaries.
 """
 
-import os
 import json
+import os
 import time
-import subprocess
 from datetime import datetime
-from config import DATA_PATH, UPDATE_INTERVAL, ANTHROPIC_KEY
+
+from config import DATA_PATH, UPDATE_INTERVAL
 
 
 def clear():
     os.system("cls" if os.name == "nt" else "clear")
 
 
-def load_latest():
+def load_json(path):
     try:
-        with open(f"{DATA_PATH}/predictions/latest.json") as f:
-            return json.load(f)
-    except:
+        with open(path, encoding="utf-8") as file:
+            return json.load(file)
+    except Exception:
         return None
+
+
+def load_latest():
+    return load_json(f"{DATA_PATH}/predictions/latest.json")
 
 
 def load_live():
-    try:
-        with open(f"{DATA_PATH}/live/latest.json") as f:
-            return json.load(f)
-    except:
-        return None
+    return load_json(f"{DATA_PATH}/live/latest.json")
 
 
 def load_news():
-    try:
-        with open(f"{DATA_PATH}/news/latest.json") as f:
-            return json.load(f)
-    except:
-        return None
+    return load_json(f"{DATA_PATH}/news/latest.json")
 
 
-# ================================================================
-# MAIN DISPLAY
-# ================================================================
-def display(tick=0):
-    clear()
+def render_header(tick):
     now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    spin = ["⠋","⠙","⠹","⠸","⠼","⠴","⠦","⠧","⠇","⠏"][tick % 10]
-
+    spin = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"][tick % 10]
     print("╔══════════════════════════════════════════════════════════╗")
-    print("║          ZAI WORLD MODEL — MARKET PREDICTION AI          ║")
+    print("║        ANTEROOM DATA MODEL — INTELLIGENCE TERMINAL       ║")
     print(f"║                    {now}                  ║")
-    print(f"║           {spin} LIVE  by Zawwar (Zawwarsami16)              ║")
+    print(f"║              {spin} Live research dashboard              ║")
     print("╚══════════════════════════════════════════════════════════╝")
 
-    # ── LIVE MARKETS ──────────────────────────────────────────
+
+def render_live_markets():
     live = load_live()
-    if live:
-        print("\n📊 LIVE MARKETS:")
-        print("─" * 60)
-        items = [
-            ("S&P 500",   live.get("sp500")),
-            ("NASDAQ",    live.get("nasdaq")),
-            ("Gold",      live.get("gold")),
-            ("Oil (WTI)", live.get("oil")),
-            ("VIX Fear",  live.get("vix")),
-            ("Bitcoin",   live.get("bitcoin")),
-            ("Ethereum",  live.get("ethereum")),
-        ]
-        for name, d in items:
-            if d:
-                price = d.get("price", 0)
-                chg = d.get("change_pct", 0)
-                arr = "↑" if chg > 0 else "↓"
-                sign = "+" if chg > 0 else ""
-                print(f"  {name:<12} ${price:>12,.2f}   {arr} {sign}{chg:.2f}%")
-    else:
-        print("\n⚠️  No live data. Run: python3 data_collector.py")
+    if not live:
+        print("\n⚠️  No live market snapshot found. Run: python3 data_collector.py")
+        return
 
-    # ── NEWS BRAIN ────────────────────────────────────────────
+    print("\n📊 LIVE MARKETS")
+    print("─" * 60)
+    items = [
+        ("S&P 500", live.get("sp500")),
+        ("NASDAQ", live.get("nasdaq")),
+        ("Gold", live.get("gold")),
+        ("Oil (WTI)", live.get("oil")),
+        ("VIX", live.get("vix")),
+        ("Bitcoin", live.get("bitcoin")),
+        ("Ethereum", live.get("ethereum")),
+    ]
+    for name, data in items:
+        if data:
+            price = data.get("price", 0)
+            change = data.get("change_pct", 0)
+            arrow = "↑" if change > 0 else "↓"
+            sign = "+" if change > 0 else ""
+            print(f"  {name:<12} ${price:>12,.2f}   {arrow} {sign}{change:.2f}%")
+
+
+def render_world_events():
     news = load_news()
-    if news and news.get("triggered_categories"):
-        print(f"\n📰 WORLD EVENTS (from {news.get('total_articles', 0)} articles):")
-        print("─" * 60)
-        for cat, info in list(news["triggered_categories"].items())[:4]:
-            bar = "█" * min(info["count"], 8)
-            print(f"  {cat:<16} {bar} ({info['count']})")
+    if not news or not news.get("triggered_categories"):
+        return
 
-        if news.get("ai_analysis"):
-            risk = news["ai_analysis"].get("overall_risk_level", "N/A")
-            theme = news["ai_analysis"].get("dominant_theme", "N/A")
-            risk_icon = {"LOW": "🟢", "MEDIUM": "🟡",
-                         "HIGH": "🟠", "CRITICAL": "🔴"}.get(risk, "⚪")
-            print(f"\n  Risk: {risk_icon} {risk}  |  Theme: {theme}")
+    print(f"\n📰 WORLD EVENT SIGNALS ({news.get('total_articles', 0)} articles)")
+    print("─" * 60)
+    for category, info in list(news["triggered_categories"].items())[:4]:
+        bar = "█" * min(info.get("count", 0), 8)
+        print(f"  {category:<16} {bar} ({info.get('count', 0)})")
 
-    # ── AI PREDICTION ─────────────────────────────────────────
+    analysis = news.get("ai_analysis") or {}
+    if analysis:
+        risk = analysis.get("overall_risk_level", "N/A")
+        theme = analysis.get("dominant_theme", "N/A")
+        icon = {"LOW": "🟢", "MEDIUM": "🟡", "HIGH": "🟠", "CRITICAL": "🔴"}.get(risk, "⚪")
+        print(f"\n  Risk: {icon} {risk}  |  Theme: {theme}")
+
+
+def render_scenario_summary():
     analysis = load_latest()
-    if analysis and analysis.get("ai_prediction"):
-        pred = analysis["ai_prediction"]
-        print("\n🤖 ZAI PREDICTION:")
-        print("─" * 60)
+    if not analysis or not analysis.get("ai_prediction"):
+        print("\n⚠️  No scenario summary found. Run: python3 correlation_engine.py")
+        return
 
-        outlook = pred.get("overall_market_outlook", "N/A")
-        conf = pred.get("confidence", 0)
-        era = pred.get("current_era_similarity", "N/A")
+    summary = analysis["ai_prediction"]
+    print("\n🤖 SCENARIO SUMMARY")
+    print("─" * 60)
 
-        outlook_icon = {
-            "BULLISH": "🟢", "BEARISH": "🔴",
-            "NEUTRAL": "🟡", "VOLATILE": "🟠"
-        }.get(outlook, "⚪")
+    outlook = summary.get("overall_market_outlook", "N/A")
+    confidence = int(summary.get("confidence", 0) or 0)
+    era = summary.get("current_era_similarity", "N/A")
+    icon = {"BULLISH": "🟢", "BEARISH": "🔴", "NEUTRAL": "🟡", "VOLATILE": "🟠"}.get(outlook, "⚪")
 
-        print(f"  Outlook:     {outlook_icon} {outlook}")
-        print(f"  Confidence:  {'█' * (conf // 10)}{'░' * (10 - conf // 10)} {conf}%")
-        print(f"  Similar to:  {era}")
+    print(f"  Outlook:     {icon} {outlook}")
+    print(f"  Confidence:  {'█' * (confidence // 10)}{'░' * (10 - confidence // 10)} {confidence}%")
+    print(f"  Similar to:  {era}")
 
-        predictions = pred.get("predictions", {})
-        if predictions:
-            print("\n  📅 TIMELINE:")
-            for period, p in predictions.items():
-                d = p.get("direction", "?")
-                m = p.get("magnitude", "?")
-                icon = "↑" if d == "UP" else "↓" if d == "DOWN" else "→"
-                print(f"    {period:<12} {icon} {d} ~{m}")
+    predictions = summary.get("predictions", {})
+    if predictions:
+        print("\n  📅 RESEARCH HORIZONS")
+        for period, item in predictions.items():
+            direction = item.get("direction", "?")
+            magnitude = item.get("magnitude", "?")
+            arrow = "↑" if direction == "UP" else "↓" if direction == "DOWN" else "→"
+            print(f"    {period:<12} {arrow} {direction} ~{magnitude}")
 
-        crypto = pred.get("crypto_specific", {})
-        if crypto:
-            print(f"\n  🪙 CRYPTO:  {crypto.get('outlook', 'N/A')}")
-            print(f"     Driver: {crypto.get('key_driver', 'N/A')}")
+    signals = summary.get("key_signals", [])
+    if signals:
+        print("\n  ⚡ KEY SIGNALS")
+        for signal in signals[:3]:
+            print(f"    • {signal}")
 
-        signals = pred.get("key_signals", [])
-        if signals:
-            print("\n  ⚡ KEY SIGNALS:")
-            for s in signals[:3]:
-                print(f"    • {s}")
+    text = summary.get("summary", "")
+    if text:
+        print(f"\n  💬 {text[:140]}")
 
-        warnings = pred.get("warning_signs", [])
-        if warnings:
-            print("\n  ⚠️  WARNINGS:")
-            for w in warnings[:2]:
-                print(f"    • {w}")
+    similarities = analysis.get("current_similarity", [])
+    if similarities:
+        print("\n  📜 HISTORICAL SIMILARITY")
+        for item in similarities[:3]:
+            bar = "█" * int(item.get("similarity_pct", 0) / 10)
+            print(f"    {item['crash'][:30]:<30} {bar} {item.get('similarity_pct', 0)}%")
 
-        summary = pred.get("summary", "")
-        if summary:
-            print(f"\n  💬 {summary[:120]}")
+    generated_at = analysis.get("generated_at", "")
+    if generated_at:
+        print(f"\n  🕐 Last analysis: {generated_at[:19]}")
 
-        sims = analysis.get("current_similarity", [])
-        if sims:
-            print("\n  📜 HISTORICAL SIMILARITY:")
-            for s in sims[:3]:
-                bar = "█" * int(s["similarity_pct"] / 10)
-                print(f"    {s['crash'][:30]:<30} {bar} {s['similarity_pct']}%")
 
-        gen_time = analysis.get("generated_at", "")
-        if gen_time:
-            print(f"\n  🕐 Last analysis: {gen_time[:19]}")
-
-    else:
-        print("\n⚠️  No prediction yet.")
-        print("   Run: python3 correlation_engine.py")
-
+def display(tick=0):
+    clear()
+    render_header(tick)
+    render_live_markets()
+    render_world_events()
+    render_scenario_summary()
     print("\n" + "─" * 60)
     print(f"  🔄 Tick #{tick}  |  Refresh in {UPDATE_INTERVAL}s  |  Ctrl+C = exit")
     print("─" * 60)
 
 
-# ================================================================
-# BACKGROUND UPDATE CYCLE
-# Runs full re-analysis every 6 hours automatically
-# ================================================================
 def run_update_cycle():
     from data_collector import update_live_data
-    from correlation_engine import (load_all_data, merge_data, find_correlations,
-                                     find_lead_lag_relationships, extract_crash_patterns,
-                                     compare_current_to_history, get_ai_prediction,
-                                     save_analysis)
+    from correlation_engine import (
+        compare_current_to_history,
+        extract_crash_patterns,
+        find_correlations,
+        find_lead_lag_relationships,
+        get_ai_prediction,
+        load_all_data,
+        merge_data,
+        save_analysis,
+    )
 
-    print("\n🔄 Running full update cycle...")
+    print("\n🔄 Running scheduled update cycle...")
     update_live_data()
 
     data = load_all_data()
     if data:
-        df = merge_data(data)
-        correlations = find_correlations(df)
-        relationships = find_lead_lag_relationships(df)
-        crash_patterns = extract_crash_patterns(df)
-        similarities = compare_current_to_history(df, crash_patterns)
-        prediction = get_ai_prediction(correlations, relationships, similarities, df)
-        if prediction:
-            save_analysis(correlations, relationships, crash_patterns, similarities, prediction)
+        frame = merge_data(data)
+        correlations = find_correlations(frame)
+        relationships = find_lead_lag_relationships(frame)
+        crash_patterns = extract_crash_patterns(frame)
+        similarities = compare_current_to_history(frame, crash_patterns)
+        prediction = get_ai_prediction(correlations, relationships, similarities, frame)
+        save_analysis(correlations, relationships, crash_patterns, similarities, prediction)
 
-    # News update too if available
     try:
-        from news_brain import fetch_all_news, analyze_articles, match_to_history
-        from news_brain import get_news_ai_analysis, save_news_analysis
+        from news_brain import analyze_articles, fetch_all_news, get_news_ai_analysis, match_to_history, save_news_analysis
+
         articles = fetch_all_news(max_feeds=10)
         if articles:
             triggered = analyze_articles(articles)
-            hist_matches = match_to_history(triggered)
-            ai_analysis, _ = get_news_ai_analysis(triggered, hist_matches, articles)
-            save_news_analysis(triggered, hist_matches, ai_analysis, articles)
-    except:
+            historical = match_to_history(triggered)
+            news_summary, _source = get_news_ai_analysis(triggered, historical, articles)
+            save_news_analysis(triggered, historical, news_summary, articles)
+    except Exception:
         pass
 
 
-# ================================================================
-# RUN
-# ================================================================
 if __name__ == "__main__":
-    print("🚀 ZAI Dashboard starting...")
+    print("🚀 Starting Anteroom Data Model dashboard...")
 
     if not os.path.exists(f"{DATA_PATH}/historical"):
-        print("❌ No data found. Run first: python3 data_collector.py")
-        exit()
+        print("❌ Historical data not found. Run first: python3 data_collector.py")
+        raise SystemExit(1)
 
     tick = 0
     last_analysis = 0
-    ANALYSIS_INTERVAL = 21600  # 6 hours
+    analysis_interval = 21600
 
     while True:
         try:
@@ -232,13 +212,13 @@ if __name__ == "__main__":
             from data_collector import update_live_data
             update_live_data()
 
-            if time.time() - last_analysis > ANALYSIS_INTERVAL:
+            if time.time() - last_analysis > analysis_interval:
                 run_update_cycle()
                 last_analysis = time.time()
 
         except KeyboardInterrupt:
-            print("\n\n👋 ZAI Dashboard stopped. — Zawwar")
+            print("\n\n👋 Dashboard stopped.")
             break
-        except Exception as e:
-            print(f"\n❌ Error: {e}")
+        except Exception as exc:
+            print(f"\n❌ Dashboard error: {exc}")
             time.sleep(30)
