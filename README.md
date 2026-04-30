@@ -1,158 +1,189 @@
-# ZAI World Data Model 🌍🤖
-### Macro Market Prediction AI — Historical Data 1871 to Today
+# Anteroom Data Model
 
-**Built by Zawwar | [@Zawwarsami16](https://github.com/Zawwarsami16)**
+**Macro data intelligence system for historical market analysis, event monitoring, and scenario research.**
 
----
+Anteroom Data Model is a Python-based research system that collects long-range market and macroeconomic data, monitors world-event signals, compares current conditions against historical stress periods, and produces structured scenario summaries through local or API-based language models.
 
-## What Is This?
-
-I built ZAI World Data Model because I wanted to understand why markets crash — not just when they crash, but what conditions always seem to come before them.
-
-The idea: if you download 125+ years of global financial data and find the hidden connections between markets, you can compare today's conditions to every historical crash and see which one it most resembles.
-
-Think of it like a fingerprint database for financial crises.
+> Built by **Anteroom Studio** as part of its research systems and intelligence tooling.
 
 ---
 
-## How It Works
+## Overview
 
+This project was designed to study market regimes as connected systems rather than isolated charts. It combines historical financial data, live market snapshots, world-event monitoring, lead-lag analysis, and historical similarity matching.
+
+It helps explore questions such as:
+
+- Which indicators historically move before others?
+- Which historical stress periods resemble current conditions?
+- What categories of news are most relevant to market risk?
+- How do equities, commodities, rates, currencies, and crypto behave across similar regimes?
+
+This is a research and analysis tool, not a trading signal service.
+
+---
+
+## System Flow
+
+```text
+Historical Data + Live Market Data + World News Feeds
+                         ↓
+Data Normalization and Storage
+                         ↓
+Correlation and Lead-Lag Engine
+                         ↓
+Historical Stress-Period Matching
+                         ↓
+Optional Local/API Model Summary
+                         ↓
+Terminal Dashboard
 ```
-Historical Data (1871–today)
-+ Live Market Data (auto-updated every 5min)
-+ World News Feed (435+ RSS sources)
-         ↓
-Correlation Engine
-finds: "when oil spikes → inflation follows in 6–8 weeks"
-         ↓
-Pattern Matching
-"today looks 78% like conditions before the 2008 crash"
-         ↓
-AI Prediction (local LLM or Claude API)
-4-week, 3-month, 6-month market outlook
-         ↓
-Live Terminal Dashboard — runs 24/7
-```
 
 ---
 
-## Quick Start
+## Core Capabilities
 
-**1. Install dependencies**
+- Historical market and macro data collection
+- Live market refresh cycle
+- Cross-asset correlation analysis
+- Lead-lag relationship detection
+- Historical stress-period comparison
+- RSS-based world-event monitoring
+- Local LLM support through Ollama
+- Optional Anthropic API fallback
+- Terminal dashboard for live review
+- Hardware-aware launcher
+
+---
+
+## Data Sources
+
+| Source | Coverage |
+|---|---|
+| FRED | Inflation, GDP, rates, unemployment, treasury data |
+| Yahoo Finance | Equities, commodities, volatility, market indices |
+| CoinGecko | Bitcoin and Ethereum market data |
+| World Bank | Global macroeconomic data |
+| RSS feeds | World events, market news, energy, crypto, policy, technology |
+
+---
+
+## Requirements
+
+- Python 3.8+
+- 8GB RAM minimum; 12GB+ recommended
+- Around 2GB+ local storage for datasets
+- Optional Ollama installation for local summaries
+- Optional Anthropic API key for cloud model summaries
+
+---
+
+## Setup
+
+Install dependencies:
+
 ```bash
 pip install -r requirements.txt
 ```
 
-**2. Add your API key** *(optional — skip if using Ollama)*
+Create local environment settings:
 
-Edit `config.py`:
-```python
-ANTHROPIC_KEY = "your-key-here"  # console.anthropic.com
+```bash
+cp .env.example .env
 ```
 
-**3. Download historical data** *(run once — takes ~10 minutes)*
+Optional local configuration:
+
+```env
+ANTHROPIC_API_KEY=
+ANTEROOM_DATA_PATH=./anteroom_data
+ANTEROOM_USE_LOCAL_LLM=true
+ANTEROOM_LOCAL_LLM_MODEL=phi3:mini
+```
+
+Never commit `.env` or real credentials.
+
+---
+
+## Usage
+
+Download historical data:
+
 ```bash
 python3 data_collector.py
 ```
 
-**4. Run the correlation engine**
+Run the analysis engine:
+
 ```bash
 python3 correlation_engine.py
 ```
 
-**5. Launch the live dashboard**
+Run world-event analysis:
+
+```bash
+python3 news_brain.py
+```
+
+Launch the live dashboard:
+
 ```bash
 python3 dashboard.py
 ```
 
-Or use the launcher which auto-detects your hardware:
+Use the hardware-aware launcher:
+
 ```bash
 python3 zai_launcher.py
 ```
 
+> The launcher file name is retained for compatibility. It can be renamed later after repository migration.
+
 ---
 
-## Free Local AI (No API Costs)
+## Local Model Support
 
-If you have [Ollama](https://ollama.com) installed, ZAI will use it automatically — no API key needed.
+If Ollama is installed, the system can use a local model without API costs.
 
 ```bash
-ollama pull phi3:mini    # runs on CPU, 2GB download
+ollama pull phi3:mini
 ```
 
-Then set in `config.py`:
-```python
-USE_LOCAL_LLM = True
-LOCAL_LLM_MODEL = "phi3:mini"
+Recommended starting configuration:
+
+```env
+ANTEROOM_USE_LOCAL_LLM=true
+ANTEROOM_LOCAL_LLM_MODEL=phi3:mini
 ```
 
-**GPU options:**
-| GPU VRAM | Recommended Model |
-|----------|------------------|
-| 4GB+     | mistral:7b       |
-| 8GB+     | llama3:8b        |
-| 12GB+    | llama3:13b       |
-| 24GB+    | llama3:70b       |
-| No GPU   | phi3:mini (CPU)  |
+Larger systems can use models such as `mistral:7b`, `llama3:8b`, or larger variants depending on available RAM/VRAM.
 
 ---
 
-## Data Sources (All Free)
+## Project Structure
 
-| Source | Data | Coverage |
-|--------|------|----------|
-| FRED (Federal Reserve) | Inflation, GDP, Interest Rates, M2 | 1871– |
-| Yahoo Finance | S&P500, NASDAQ, Gold, Oil, VIX | 1970– |
-| CoinGecko | Bitcoin, Ethereum | 2010– |
-| World Bank | Global GDP | 1960– |
-
----
-
-## Files
-
-| File | What It Does |
-|------|-------------|
-| `config.py` | Settings — the only file you need to edit |
-| `data_collector.py` | Downloads all historical + live data |
-| `correlation_engine.py` | Finds patterns + generates prediction |
-| `news_brain.py` | Monitors world events, matches to history |
-| `dashboard.py` | Live 24/7 terminal display |
-| `zai_launcher.py` | Auto-detects hardware, installs what's needed |
+| File | Purpose |
+|---|---|
+| `config.py` | Safe runtime configuration and environment loading |
+| `data_collector.py` | Historical and live market data collection |
+| `correlation_engine.py` | Correlation, lead-lag, and historical similarity analysis |
+| `news_brain.py` | RSS-based world-event monitoring and market-impact mapping |
+| `dashboard.py` | Terminal dashboard for live review |
+| `zai_launcher.py` | Hardware-aware launcher retained for compatibility |
+| `.env.example` | Safe local environment template |
+| `.gitignore` | Keeps local datasets, caches, and secrets out of Git |
 
 ---
 
-## What Gets Detected
+## Safety and Scope
 
-- 105 correlation pairs across 15 global markets
-- 7 historical crash patterns (1929 Great Depression → 2022 Crypto Crash)
-- Lead-lag relationships — which market moves before another
-- Real-time similarity score: "today looks X% like [historical event]"
-- Live news analysis from 435+ RSS feeds with market impact mapping
+Anteroom Data Model is intended for research, education, and internal experimentation. Its outputs may be incomplete, stale, or incorrect depending on data-source availability, local configuration, and model behavior.
+
+This project does not provide financial, investment, legal, or professional advice. Always verify outputs independently before using them in any real-world decision.
 
 ---
 
-## Hardware Requirements
+## Studio
 
-- **RAM:** 8GB minimum, 12GB+ recommended
-- **Storage:** 2GB for data (I use a 1TB portable SSD)
-- **GPU:** Not needed — uses API or CPU-based local model
-- **Python:** 3.8+
-
----
-
-## Roadmap
-
-- [x] Historical data download (15 sources, 1871–today)
-- [x] Correlation engine (105 pairs)
-- [x] Crash pattern matching (7 historical events)
-- [x] Claude API predictions
-- [x] Local LLM support (Ollama)
-- [x] Live terminal dashboard
-- [x] World news monitoring (news_brain.py)
-- [ ] Web-based dashboard
-- [ ] Telegram alerts
-- [ ] More data sources (commodities, sentiment indices)
-
----
-
-*Built for research purposes. Not financial advice.*
+**Anteroom Studio**  
+Research systems, intelligence interfaces, and experimental software.
